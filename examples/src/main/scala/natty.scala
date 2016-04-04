@@ -10,7 +10,7 @@ trait DoSucc {
   implicit def range2[A <: Nat, B <: Nat, L <: HList]
   (implicit
     w: Witness.Aux[A],
-    r: Lazy[RangeAlt.Aux[Succ[A], B, L]]
+    r: Lazy[Aux[Succ[A], B, L]]
   ): Aux[A, B, A :: L] =
     new RangeAlt[A, B] {
       type Out = A :: L

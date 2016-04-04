@@ -4,22 +4,22 @@ object data {
 }
 
 
-
-
 object ImplicitTesting extends App {
-  //
   import data._
+  import shapeless._
 
-  val x = _root_.shapeless.Generic[Foo]
+  // works
+  val x = Generic[List[Int]]
 
+  // Setup
   import scala.tools.reflect._
-
   val universe = scala.reflect.runtime.currentMirror.universe
-  val tb = scala.reflect.runtime.currentMirror.mkToolBox()
+  val tb = scala.reflect.runtime.currentMirror.mkToolBox(frontEnd = mkConsoleFrontEnd(-1), options="-language:experimental.macros -Ydebug -Ymacro-debug-verbose -Xlog-implicits")
   import universe._
-  val tag = implicitly[TypeTag[Foo]]
+  /*val t = q"import _root_.shapeless._; Generic[data.Foo]"
 
-  val tag2 = implicitly[TypeTag[_root_.shapeless.Generic[Foo]]]
-  println(showRaw(tq"${tag2.tpe.typeSymbol}"))
-  tb.eval(q"import _root_.shapeless._; Generic[${tag.tpe.dealias.typeSymbol}]").asInstanceOf[_root_.shapeless.Generic[Foo]]
+  val tt = tb.typecheck(t, tb.TERMmode)*/
+  println(showRaw(tb.inferImplicitValue(typeOf[Generic[data.Foo]], silent = false, withMacrosDisabled = false)))
+
+
 }

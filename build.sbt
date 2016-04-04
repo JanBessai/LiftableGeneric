@@ -23,13 +23,13 @@ lazy val commonSettings = Seq(
     Resolver.sonatypeRepo("snapshots")
   ),
 
-  scalaVersion := "2.11.7",
+  scalaVersion := "2.11.8",
   scalacOptions ++= Seq(
     "-unchecked",
     "-deprecation",
     "-feature",
-    "-language:implicitConversions",
-    "-Xlog-implicits"
+    "-language:implicitConversions"//,
+    //"-Xlog-implicits"
   )
 )
 

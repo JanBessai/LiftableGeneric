@@ -2,7 +2,7 @@ package shapeless.liftable
 import scala.reflect.api.Universe
 import shapeless._
 
-trait liftables {
+trait Liftables {
   val universe: Universe
   import universe._
 
@@ -20,7 +20,7 @@ trait liftables {
     new GenericLiftable[H::T] {
       val liftable: Liftable[H::T] =
         Liftable[H :: T] { (x: H :: T) =>
-          q"""_root_.shapeless.::[${htag.tpe.typeSymbol}, ${ttag.tpe.typeSymbol}](${lh.value.liftable(x.head)}, ${lt.value.liftable(x.tail)})"""
+          q"""_root_.shapeless.::[${htag.tpe}, ${ttag.tpe}](${lh.value.liftable(x.head)}, ${lt.value.liftable(x.tail)})"""
         }
     }
 
@@ -33,14 +33,14 @@ trait liftables {
 
     implicit final def liftCCons[L, R <: Coproduct](implicit
       ll: Cached[GenericLiftable[L]],
-      lr: Cached[GenericLiftable[R]]): GenericLiftable[L :+: R] =
+      lr: Cached[GenericLiftable[R]],
+      ltag: WeakTypeTag[L],
+      rtag: WeakTypeTag[R]): GenericLiftable[L :+: R] =
       new GenericLiftable[L :+: R] {
         val liftable: Liftable[L :+: R] =
-          Liftable[L :+: R] { (x: L :+: R) =>
-            x match {
-              case Inl(l) => q"""_root_.shapeless.Inl(${ll.value.liftable(l)})"""
-              case Inr(r) => q"""_root_.shapeless.Inr(${lr.value.liftable(r)})"""
-            }
+          Liftable[L :+: R] {
+            case Inl(l) => q"""_root_.shapeless.Inl[${ltag.tpe}, ${rtag.tpe}](${ll.value.liftable(l)})"""
+            case Inr(r) => q"""_root_.shapeless.Inr[${ltag.tpe}, ${rtag.tpe}](${lr.value.liftable(r)})"""
           }
       }
 
@@ -61,9 +61,7 @@ trait liftables {
       new GenericLiftable[T] {
         val liftable: Liftable[T] =
           Liftable[T] { (x: T) =>
-            //import _root_.shapeless._;
-            //val x = implicitly[Generic[${tag.tpe.typeSymbol}]]
-            q"""implicit val gen = _root_.shapeless.Generic[${tag.tpe}]; x.from(${lrepr.value.value.liftable(gen.to(x))})"""
+            q"""_root_.shapeless.Generic[${tag.tpe}].from(${lrepr.value.value.liftable(gen.to(x))})"""
           }
       }
   }
@@ -76,11 +74,11 @@ trait liftables {
   }
 
   object GenericLiftable extends StandardInstances {
-    def apply[T](implicit lt: GenericLiftable[T]): GenericLiftable[T] = lt
+    def apply[T](implicit lt: GenericLiftable[T]): Liftable[T] = lt.liftable
   }
 
 }
 
-object runtimeLiftables extends liftables {
-  val universe = scala.reflect.runtime.universe
+trait RuntimeLiftables extends Liftables {
+  val universe: scala.reflect.runtime.universe.type = scala.reflect.runtime.universe
 }
